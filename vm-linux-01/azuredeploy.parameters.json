@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "location": {
+          "value": "northeurope"
+      },
+      "configName": {
+        "value": "bubuntu-10"
+      },
+      
+      "networkSecurityGroupRules": {
+          "value": [
+              {
+                  "name": "SSH",
+                  "properties": {
+                      "priority": 300,
+                      "protocol": "TCP",
+                      "access": "Allow",
+                      "direction": "Inbound",
+                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourcePortRange": "*",
+                      "destinationAddressPrefix": "*",
+                      "destinationPortRange": "22"
+                  }
+              },
+              {
+                  "name": "HTTP",
+                  "properties": {
+                      "priority": 320,
+                      "protocol": "TCP",
+                      "access": "Allow",
+                      "direction": "Inbound",
+                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourcePortRange": "*",
+                      "destinationAddressPrefix": "*",
+                      "destinationPortRange": "80"
+                  }
+              },
+              {
+                  "name": "HTTPS",
+                  "properties": {
+                      "priority": 340,
+                      "protocol": "TCP",
+                      "access": "Allow",
+                      "direction": "Inbound",
+                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourcePortRange": "*",
+                      "destinationAddressPrefix": "*",
+                      "destinationPortRange": "443"
+                  }
+              },
+              {
+                  "name": "Virtualmin",
+                  "properties": {
+                      "priority": 350,
+                      "protocol": "TCP",
+                      "access": "Allow",
+                      "direction": "Inbound",
+                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourcePortRange": "*",
+                      "destinationAddressPrefix": "*",
+                      "destinationPortRange": "10000"
+                  }
+              }
+          ]
+      },
+      
+      "addressPrefixes": {
+          "value": [
+              "172.16.0.0/24"
+          ]
+      },
+      "subnets": {
+          "value": [
+              {
+                  "name": "default",
+                  "properties": {
+                      "addressPrefix": "172.16.0.0/24"
+                  }
+              }
+          ]
+      },
+      "adminUsername": {
+          "value": "labadmin"
+      },
+      "adminPassword": {
+          "value": null
+      }
+    }
+}

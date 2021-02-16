@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "configName": {
+      "value": "TlgBaseConfig-01"
+    },
+    "domainName": {
+      "value": "corp.contoso.com"
+    },
+    "serverOS": {
+      "value": "2016-Datacenter"
+    },
+    "adminUsername": {
+      "value": "labadmin"
+    },
+    "adminPassword": {
+      "value": "1337.Passw0rd"
+    },
+    "vmSize": {
+      "value": "Standard_B2m"
+    },
+    "dnsLabelPrefix": {
+      "value": ""
+    },
+    "_artifactsLocation": {
+      "value": "https://raw.githubusercontent.com/ecstrim/lab-adds-02/master"
+    }
+  }
+}
