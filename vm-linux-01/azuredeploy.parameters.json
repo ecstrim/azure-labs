@@ -85,7 +85,7 @@
           "value": "labadmin"
       },
       "adminPassword": {
-          "value": null
+          "value": "1337.Passw0rd"
       }
     }
 }
