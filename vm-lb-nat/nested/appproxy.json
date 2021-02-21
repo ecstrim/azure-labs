@@ -30,7 +30,7 @@
           "vmSize": "[parameters('SharedVmConfig').vmSize]"
         },
         "osProfile": {
-          "computerName": "[parameters('vmName')]",
+          "computerName": "appx01",
           "adminUsername": "[parameters('SharedVmConfig').adminUsername]",
           "adminPassword": "[parameters('SharedVmConfig').adminPassword]"
         },

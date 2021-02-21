@@ -5,39 +5,6 @@
       "configName": {
         "value": "bubuntu-11"
       },
-      
-      "lbNatInboundRules": {
-          "value": [
-            {
-                "name": "in-nat-rdp-appx",
-                "properties": {
-                    "frontendIPConfiguration": {
-                        "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
-                    },
-                    "frontendPort": 13389,
-                    "backendPort": 3389,
-                    "enableFloatingIP": false,
-                    "idleTimeoutInMinutes": 4,
-                    "protocol": "Tcp",
-                    "enableTcpReset": false
-                }
-            },
-            {
-                "name": "in-nat-rdp-dc1",
-                "properties": {
-                    "frontendIPConfiguration": {
-                        "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
-                    },
-                    "frontendPort": 23389,
-                    "backendPort": 23389,
-                    "enableFloatingIP": false,
-                    "idleTimeoutInMinutes": 4,
-                    "protocol": "Tcp",
-                    "enableTcpReset": false
-                }
-            }
-        ]
-      },      
       "adminUsername": {
           "value": "labadmin"
       },
