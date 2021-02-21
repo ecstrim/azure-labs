@@ -325,7 +325,7 @@
       "comments": "This is the deployment resource for the app proxy VM.",
       "dependsOn": [
         "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameAPPX'))]",
-        "[concat('Microsoft.Resources/deployments/','ADDC')]"
+        "[concat('Microsoft.Resources/deployments/','DomainController')]"
       ],
       "properties": {
         "mode": "Incremental",
