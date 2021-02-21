@@ -9,9 +9,6 @@
         "lbPIP": {
             "defaultValue": "/subscriptions/7230ff51-890e-47d5-a298-ec9e6920fc05/resourceGroups/weu-lab-03/providers/Microsoft.Network/publicIPAddresses/lab-lb02-pip",
             "type": "String"
-        },
-        "lbNatInboundRules": { 
-            "type": "array"
         }
     },
     "variables": {},
@@ -40,7 +37,51 @@
                 "backendAddressPools": [],
                 "loadBalancingRules": [],
                 "probes": [],
-                "inboundNatRules": "[parameters('lbNatInboundRules')]"
+                "inboundNatRules": [
+                        {
+                            "name": "in-nat-rdp-appx",
+                            "properties": {
+                                "frontendIPConfiguration": {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
+                                },
+                                "frontendPort": 13389,
+                                "backendPort": 3389,
+                                "enableFloatingIP": false,
+                                "idleTimeoutInMinutes": 4,
+                                "protocol": "Tcp",
+                                "enableTcpReset": false
+                            }
+                        },
+                        {
+                            "name": "in-nat-rdp-dc1",
+                            "properties": {
+                                "frontendIPConfiguration": {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
+                                },
+                                "frontendPort": 23389,
+                                "backendPort": 23389,
+                                "enableFloatingIP": false,
+                                "idleTimeoutInMinutes": 4,
+                                "protocol": "Tcp",
+                                "enableTcpReset": false
+                            }
+                        },
+                        {
+                            "name": "in-nat-rdp-lnx1",
+                            "properties": {
+                                "frontendIPConfiguration": {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
+                                },
+                                "frontendPort": 10022,
+                                "backendPort": 10022,
+                                "enableFloatingIP": false,
+                                "idleTimeoutInMinutes": 4,
+                                "protocol": "Tcp",
+                                "enableTcpReset": false
+                            }
+                        }
+                        
+                    ],
                 "inboundNatPools": []
             }
         },
@@ -75,7 +116,26 @@
                     "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
                 },
                 "frontendPort": 23389,
-                "backendPort": 23389,
+                "backendPort": 3389,
+                "enableFloatingIP": false,
+                "idleTimeoutInMinutes": 4,
+                "protocol": "Tcp",
+                "enableTcpReset": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(parameters('lbName'), '/in-nat-ssh-lnx1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('lbName'))]"
+            ],
+            "properties": {
+                "frontendIPConfiguration": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
+                },
+                "frontendPort": 10022,
+                "backendPort": 22,
                 "enableFloatingIP": false,
                 "idleTimeoutInMinutes": 4,
                 "protocol": "Tcp",

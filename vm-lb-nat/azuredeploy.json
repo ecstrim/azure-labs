@@ -6,9 +6,6 @@
           "type": "String",
           "defaultValue": "bubuntu"
         },
-        "networkSecurityGroupRules": {
-            "type": "Array"
-        },
         "vmSize": {
             "type": "String", 
             "defaultValue": "Standard_B2s"
@@ -50,39 +47,6 @@
                 "description": "The OS of application servers in your deployment."
             },
             "defaultValue": "2016-Datacenter"
-        },
-        "lbNatInboundRules": {
-            "type": "array",
-            "value": [
-            {
-                "name": "in-nat-rdp-appx",
-                "properties": {
-                    "frontendIPConfiguration": {
-                        "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
-                    },
-                    "frontendPort": 13389,
-                    "backendPort": 3389,
-                    "enableFloatingIP": false,
-                    "idleTimeoutInMinutes": 4,
-                    "protocol": "Tcp",
-                    "enableTcpReset": false
-                }
-            },
-            {
-                "name": "in-nat-rdp-dc1",
-                "properties": {
-                    "frontendIPConfiguration": {
-                        "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('lbName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
-                    },
-                    "frontendPort": 23389,
-                    "backendPort": 23389,
-                    "enableFloatingIP": false,
-                    "idleTimeoutInMinutes": 4,
-                    "protocol": "Tcp",
-                    "enableTcpReset": false
-                }
-            }
-        ]
         }
     },
     "variables": {
@@ -172,7 +136,21 @@
             "name": "[variables('networkSecurityGroupName')]",
             "location": "[resourceGroup().location]",
             "properties": {
-                "securityRules": "[parameters('networkSecurityGroupRules')]"
+                "securityRules": [
+                    {
+                        "name": "HTTP",
+                        "properties": {
+                            "priority": 1000,
+                            "protocol": "TCP",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourceAddressPrefix": "93.35.221.65/32",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "*"
+                        }
+                    }
+                ]
             }
         },
         {
@@ -405,35 +383,6 @@
                 },
                 "nicName": {
                     "value": "[variables('networkInterfaceNameLNX')]"
-                }
-            }
-        }
-    },
-    {
-        "name": "LoadBalancer",
-        "type": "Microsoft.Resources/deployments",
-        "apiVersion": "2015-01-01",
-        "comments": "This is the deployment resource for the LoadBalancer.",
-        "dependsOn": [
-            "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameDC'))]",
-            "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameAPPX'))]",
-            "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameLNX'))]"
-        ],
-        "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-                "uri": "[concat(variables('templates'),'/linuxsrv.json',parameters('_artifactsLocationSasToken'))]",
-                "contentVersion": "1.0.0.0"
-            },
-            "parameters": {
-                "SharedVmConfig": { 
-                    "value": "[variables('SharedVmConfig')]" 
-                },
-                "vmName": {
-                    "value": "[variables('VMs').linuxVmName]"
-                },
-                "lbNatInboundRules": {
-                    "value": "[parameters('lbNatInboundRules')]"
                 }
             }
         }

@@ -6,63 +6,6 @@
         "value": "bubuntu-11"
       },
       
-      "networkSecurityGroupRules": {
-          "value": [
-              {
-                  "name": "SSH",
-                  "properties": {
-                      "priority": 300,
-                      "protocol": "TCP",
-                      "access": "Allow",
-                      "direction": "Inbound",
-                      "sourceAddressPrefix": "93.35.221.65/32",
-                      "sourcePortRange": "*",
-                      "destinationAddressPrefix": "*",
-                      "destinationPortRange": "22"
-                  }
-              },
-              {
-                  "name": "HTTP",
-                  "properties": {
-                      "priority": 320,
-                      "protocol": "TCP",
-                      "access": "Allow",
-                      "direction": "Inbound",
-                      "sourceAddressPrefix": "93.35.221.65/32",
-                      "sourcePortRange": "*",
-                      "destinationAddressPrefix": "*",
-                      "destinationPortRange": "80"
-                  }
-              },
-              {
-                  "name": "HTTPS",
-                  "properties": {
-                      "priority": 340,
-                      "protocol": "TCP",
-                      "access": "Allow",
-                      "direction": "Inbound",
-                      "sourceAddressPrefix": "93.35.221.65/32",
-                      "sourcePortRange": "*",
-                      "destinationAddressPrefix": "*",
-                      "destinationPortRange": "443"
-                  }
-              },
-              {
-                  "name": "Virtualmin",
-                  "properties": {
-                      "priority": 350,
-                      "protocol": "TCP",
-                      "access": "Allow",
-                      "direction": "Inbound",
-                      "sourceAddressPrefix": "93.35.221.65/32",
-                      "sourcePortRange": "*",
-                      "destinationAddressPrefix": "*",
-                      "destinationPortRange": "10000"
-                  }
-              }
-          ]
-      },
-
       "lbNatInboundRules": {
           "value": [
             {
