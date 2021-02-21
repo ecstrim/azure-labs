@@ -1,10 +1,7 @@
 {
-    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "location": {
-            "type": "String"
-        },
         "configName": {
           "type": "String",
           "defaultValue": "bubuntu"
@@ -149,7 +146,7 @@
                     "computerName": "[variables('virtualMachineComputerName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]",
-                    "customData": "[base64(concat('#!/bin/bash\n wget http://software.virtualmin.com/gpl/scripts/install.sh\n	sudo /bin/sh install.sh --force --minimal > /tmp/vmin-install.log\n 	virtualmin config-system -b MiniLAMP -l /tmp/vmin-config.log'))]"
+                    "customData": "[base64(concat('#!/bin/bash\n wget http://software.virtualmin.com/gpl/scripts/install.sh\n sudo /bin/sh install.sh --force --minimal > /tmp/vmin-install.log\n virtualmin config-system -b MiniLAMP -l /tmp/vmin-config.log'))]"
                 },
                 "diagnosticsProfile": {
                     "bootDiagnostics": {

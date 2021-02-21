@@ -15,7 +15,7 @@
                       "protocol": "TCP",
                       "access": "Allow",
                       "direction": "Inbound",
-                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourceAddressPrefix": "93.35.221.65/32",
                       "sourcePortRange": "*",
                       "destinationAddressPrefix": "*",
                       "destinationPortRange": "22"
@@ -28,7 +28,7 @@
                       "protocol": "TCP",
                       "access": "Allow",
                       "direction": "Inbound",
-                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourceAddressPrefix": "93.35.221.65/32",
                       "sourcePortRange": "*",
                       "destinationAddressPrefix": "*",
                       "destinationPortRange": "80"
@@ -41,7 +41,7 @@
                       "protocol": "TCP",
                       "access": "Allow",
                       "direction": "Inbound",
-                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourceAddressPrefix": "93.35.221.65/32",
                       "sourcePortRange": "*",
                       "destinationAddressPrefix": "*",
                       "destinationPortRange": "443"
@@ -54,7 +54,7 @@
                       "protocol": "TCP",
                       "access": "Allow",
                       "direction": "Inbound",
-                      "sourceAddressPrefix": "93.39.149.48/32",
+                      "sourceAddressPrefix": "93.35.221.65/32",
                       "sourcePortRange": "*",
                       "destinationAddressPrefix": "*",
                       "destinationPortRange": "10000"
@@ -93,24 +93,8 @@
                     "enableTcpReset": false
                 }
             }
-        ],
-      }
-      
-      "addressPrefixes": {
-          "value": [
-              "172.16.0.0/24"
-          ]
-      },
-      "subnets": {
-          "value": [
-              {
-                  "name": "default",
-                  "properties": {
-                      "addressPrefix": "172.16.0.0/24"
-                  }
-              }
-          ]
-      },
+        ]
+      },      
       "adminUsername": {
           "value": "labadmin"
       },

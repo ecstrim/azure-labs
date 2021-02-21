@@ -1,0 +1,418 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "configName": {
+          "type": "String",
+          "defaultValue": "bubuntu"
+        },
+        "networkSecurityGroupRules": {
+            "type": "Array"
+        },
+        "vmSize": {
+            "type": "String", 
+            "defaultValue": "Standard_B2s"
+        },
+        "adminUsername": {
+            "type": "String",
+            "defaultValue": "labadmin"
+        },
+        "adminPassword": {
+            "type": "SecureString"
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "Auto-generated container in staging storage account to receive post-build staging folder upload."
+            },
+            "defaultValue": "https://raw.githubusercontent.com/ecstrim/azure-labs/master/vm-lb-nat"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation."
+            },
+            "defaultValue": ""
+        },
+        "domainName": {
+            "type": "string",
+            "metadata": {
+                "description": "The FQDN of the new AD domain."
+            },
+            "defaultValue": "corp.xtrlabs.eu"
+        },
+        "serverOS": {
+            "type": "string",
+            "allowedValues": [
+                "2012-R2-Datacenter", "2016-Datacenter"
+            ],
+            "metadata": {
+                "description": "The OS of application servers in your deployment."
+            },
+            "defaultValue": "2016-Datacenter"
+        },
+        "lbNatInboundRules": {
+            "type": "array"
+        }
+    },
+    "variables": {
+        "shortDomainName": "[first(split(parameters('domainName'),'.'))]",
+        "domainUserName": "[concat(variables('shortDomainName'),'\\',parameters('adminUsername'))]",
+        "assetLocation": "[concat(parameters('_artifactsLocation'),'/DSC')]",
+        "templates": "[concat(parameters('_artifactsLocation'),'/nested')]",
+
+        "networkInterfaceNameDC": "[concat(parameters('configName'),'-DC-NIC')]",
+        "networkInterfaceNameAPPX": "[concat(parameters('configName'),'-APPX-NIC')]",
+        "networkInterfaceNameLNX": "[concat(parameters('configName'),'-LNX-NIC')]",
+
+        "networkSecurityGroupName": "[concat(parameters('configName'),'-NSG')]", 
+        "virtualNetworkName": "[concat(parameters('configName'),'-VNET')]", 
+        "subnetNameDC": "subnet0", 
+        "subnetNameAPPX": "subnet1", 
+        "subnetNameLNX": "subnet2", 
+
+        "vmNameDC": "[concat(parameters('configName'),'-DC-VM')]", 
+        "osDiskTypeDC": "StandardSSD_LRS",
+
+        "vmNameAPPX": "[concat(parameters('configName'),'-APPX-VM')]", 
+        "osDiskTypeAPPX": "StandardSSD_LRS",
+        
+        "vmNameLNX": "[concat(parameters('configName'),'-LNX-VM')]", 
+        "osDiskTypeLNX": "StandardSSD_LRS", 
+
+        "publicIpAddressSku": "Basic",
+        "publicIpAddressName": "[concat(parameters('configName'),'-PIP')]", 
+        "publicIpAddressType": "Dynamic", 
+
+        "nsgId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]",
+        "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+        "subnetRefDC": "[concat(variables('vnetId'), '/subnets/', variables('subnetNameDC'))]",
+        "subnetRefAPPX": "[concat(variables('vnetId'), '/subnets/', variables('subnetNameAPPX'))]",
+        "subnetRefLNX": "[concat(variables('vnetId'), '/subnets/', variables('subnetNameLNX'))]",
+
+        "storageAccountName": "[concat(uniqueString(resourceGroup().id),'storage')]",
+
+        "VMs": {
+            "adVmName": "[variables('vmNameDC')]",
+            "adConfigurationFunction": {
+                "CreateADPDC": "CreateADPDC.ps1\\CreateADPDC"
+            },
+            "adNicIP": "10.0.0.10",
+            "adOSDiskType": "[variables('osDiskTypeDC')]",
+
+            "appVmName": "[variables('vmNameAPPX')]",
+            "appConfigurationFunction": {
+                "AppConfig": "AppConfig.ps1\\AppConfig"
+            },
+            "appNicIP": "10.0.1.10",
+            "appOSDiskType": "[variables('osDiskTypeAPPX')]",
+
+            "linuxVmName": "[variables('vmNameLNX')]",
+            "linuxNicIP": "10.0.2.10", 
+            "linuxOSDiskType": "[variables('osDiskTypeLNX')]"
+        },
+
+        "SharedVmConfig": {
+            "location": "[resourceGroup().location]",
+            "vmSize": "[parameters('vmSize')]",
+            "serverOS": "[parameters('serverOS')]",
+            "domainUsername": "[variables('domainUsername')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]",
+            "storageAccountNamePrefix": "[variables('storageAccountName')]",
+            "sasToken": "[parameters('_artifactsLocationSasToken')]",
+            "domainName": "[parameters('domainName')]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2017-06-01",
+            "location": "[resourceGroup().location]",
+            "kind": "Storage",
+            "comments": "This storage account contains VHDs for VMs in the deployment.",
+            "sku": {
+                "name": "Standard_LRS"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-02-01",
+            "name": "[variables('networkSecurityGroupName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": "[parameters('networkSecurityGroupRules')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('virtualNetworkName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "subnet1",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "subnet2",
+                        "properties": {
+                            "addressPrefix": "10.0.2.0/24",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    },
+                    {
+                        "name": "subnet0",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2019-02-01",
+            "name": "[variables('publicIpAddressName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[variables('publicIpAddressSku')]"
+            },
+            "properties": {
+                "publicIpAllocationMethod": "[variables('publicIpAddressType')]"
+            }
+        },
+        
+        
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-10-01",
+            "name": "[variables('networkInterfaceNameDC')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRefDC')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[variables('nsgId')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-10-01",
+            "name": "[variables('networkInterfaceNameAPPX')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRefAPPX')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[variables('nsgId')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-10-01",
+            "name": "[variables('networkInterfaceNameLNX')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRefLNX')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[variables('nsgId')]"
+                }
+            }
+        },
+        {
+      "name": "DomainController",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "comments": "This is the deployment resource for the ADDC VM.",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameDC'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templates'),'/addc.json',parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "SharedVmConfig": { 
+            "value": "[variables('SharedVmConfig')]" 
+          },
+          "vmName": {
+            "value": "[variables('VMs').adVmName]"
+          },
+          "nicName": {
+            "value": "[variables('networkInterfaceNameDC')]"
+          },
+          "modulesURL": {
+            "value": "[variables('assetLocation')]"
+          },
+          "configurationFunction": {
+            "value": "[variables('VMs').adConfigurationFunction]"
+          }
+        }
+      }
+    },
+    {
+      "name": "AppProxyServer",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "comments": "This is the deployment resource for the app proxy VM.",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameAPPX'))]",
+        "[concat('Microsoft.Resources/deployments/','ADDC')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templates'),'/app.json',parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "SharedVmConfig": { 
+            "value": "[variables('SharedVmConfig')]" 
+          },
+          "vmName": {
+            "value": "[variables('VMs').appVmName]"
+          },
+          "nicName": {
+            "value": "[variables('networkInterfaceNameAPPX')]"
+          },
+          "modulesURL": {
+            "value": "[variables('assetLocation')]"
+          },
+          "configurationFunction": {
+            "value": "[variables('VMs').appConfigurationFunction]"
+          }
+        }
+      }
+    },
+    {
+        "name": "LinuxServer",
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2015-01-01",
+        "comments": "This is the deployment resource for the Linux Server VM.",
+        "dependsOn": [
+            "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameLNX'))]"
+        ],
+        "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+                "uri": "[concat(variables('templates'),'/linuxsrv.json',parameters('_artifactsLocationSasToken'))]",
+                "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+                "SharedVmConfig": { 
+                    "value": "[variables('SharedVmConfig')]" 
+                },
+                "vmName": {
+                    "value": "[variables('VMs').linuxVmName]"
+                },
+                "nicName": {
+                    "value": "[variables('networkInterfaceNameLNX')]"
+                }
+            }
+        }
+    },
+    {
+        "name": "LoadBalancer",
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2015-01-01",
+        "comments": "This is the deployment resource for the LoadBalancer.",
+        "dependsOn": [
+            "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameDC'))]",
+            "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameAPPX'))]",
+            "[concat('Microsoft.Network/networkInterfaces/',variables('networkInterfaceNameLNX'))]"
+        ],
+        "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+                "uri": "[concat(variables('templates'),'/linuxsrv.json',parameters('_artifactsLocationSasToken'))]",
+                "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+                "SharedVmConfig": { 
+                    "value": "[variables('SharedVmConfig')]" 
+                },
+                "vmName": {
+                    "value": "[variables('VMs').linuxVmName]"
+                },
+                "lbNatInboundRules": {
+                    "value": "[parameters('lbNatInboundRules')]"
+                }
+            }
+        }
+    }
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "String",
+            "value": "[parameters('adminUsername')]"
+        }
+    }
+}
