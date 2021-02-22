@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
       "configName": {
-        "value": "bubuntu-11"
+        "value": "XLAB"
       },
       "adminUsername": {
           "value": "labadmin"
